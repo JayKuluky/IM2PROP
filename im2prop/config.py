@@ -39,7 +39,7 @@ DEFAULT_CONFIG = {
     "FREEZE_ENCODER": True,
     "USE_PHASE_RATIOS": True,
     "USE_PHASE_ATTENTION": True,
-    "USE_PHASE_FEAT": False,
+    "USE_PHASE_FEAT": True,
     # Visualization parameters
     "NUM_VIZ_SAMPLES": 6,
     "VIZ_COLS": 3,

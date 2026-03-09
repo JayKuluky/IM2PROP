@@ -1,0 +1,27 @@
+Metadata-Version: 2.4
+Name: im2prop
+Version: 0.1.0
+Summary: IM2PROP package refactored from notebook workflow
+Requires-Python: <3.13,>=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: torch
+Requires-Dist: torchvision
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: matplotlib
+Requires-Dist: opencv-python
+Requires-Dist: scikit-learn
+Requires-Dist: scipy
+Requires-Dist: pillow
+Requires-Dist: tqdm
+Requires-Dist: wandb
+Requires-Dist: albumentations
+Requires-Dist: segmentation-models-pytorch
+Requires-Dist: timm
+Requires-Dist: scikit-image
+Requires-Dist: pretrained-microscopy-models
+Dynamic: license-file
+
+# IM2PROP
+no idea yet

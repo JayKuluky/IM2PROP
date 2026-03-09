@@ -1,0 +1,16 @@
+torch
+torchvision
+numpy
+pandas
+matplotlib
+opencv-python
+scikit-learn
+scipy
+pillow
+tqdm
+wandb
+albumentations
+segmentation-models-pytorch
+timm
+scikit-image
+pretrained-microscopy-models

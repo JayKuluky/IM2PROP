@@ -3,3 +3,4 @@ dss_2205/
 runs/
 .DS_Store
 IM2PROP_data/
+wandb/
