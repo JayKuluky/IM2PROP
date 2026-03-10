@@ -146,8 +146,8 @@ def evaluate_test_set(model: nn.Module, dataloader: DataLoader, device: torch.de
             attn_maps.append(phase_attn.cpu().numpy())
             ratio_values.append(phase_ratios.cpu().numpy())
 
-    preds_concat = np.concatenate(preds).squeeze()
-    trues_concat = np.concatenate(trues).squeeze()
+    preds_concat = np.concatenate(preds).reshape(-1)
+    trues_concat = np.concatenate(trues).reshape(-1)
     imgs_concat = np.concatenate(rgb_imgs)
     masks_concat = np.concatenate(mask_tiles)
     attn_concat = np.concatenate(attn_maps)
@@ -211,12 +211,14 @@ def visualize_predictions(
     img_h, img_w = imgs.shape[2], imgs.shape[3]
 
     for row_idx, sample_idx in enumerate(idxs):
+        pred_value = float(preds[sample_idx])
+        true_value = float(trues[sample_idx])
         rgb_img = np.transpose(imgs[sample_idx], (1, 2, 0)).astype(np.float32)
         rgb_img_clipped = np.clip(rgb_img, 0, 1)
 
         ax0 = axes[row_idx, 0]
         ax0.imshow(rgb_img_clipped)
-        ax0.set_title(f"RGB\nTrue: {trues[sample_idx]:.3f} | Pred: {preds[sample_idx]:.3f}")
+        ax0.set_title(f"RGB\nTrue: {true_value:.3f} | Pred: {pred_value:.3f}")
         ax0.axis("off")
 
         ax1 = axes[row_idx, 1]
@@ -240,9 +242,9 @@ def visualize_predictions(
 
         ax2.imshow(overlay)
         if use_gradcam:
-            ax2.set_title("Phase Attention Overlay")
+            ax2.set_title(f"Phase Attention Overlay\nPred: {pred_value:.3f}")
         else:
-            ax2.set_title(f"Predicted Value: {preds[sample_idx]:.3f}")
+            ax2.set_title(f"Predicted Value: {pred_value:.3f}")
         ax2.axis("off")
 
         if use_gradcam:
@@ -266,7 +268,7 @@ def visualize_predictions(
                 grayscale_cam = grayscale_cam[0]
                 cam_overlay = show_cam_on_image(rgb_img_clipped, grayscale_cam, use_rgb=True)
                 ax3.imshow(cam_overlay)
-                ax3.set_title(f"Grad-CAM\nErr: {abs(trues[sample_idx] - preds[sample_idx]):.3f}")
+                ax3.set_title(f"Grad-CAM\nErr: {abs(true_value - pred_value):.3f}")
             except Exception as exc:
                 ax3.text(
                     0.5,
@@ -277,7 +279,7 @@ def visualize_predictions(
                     va="center",
                     fontsize=9,
                 )
-                ax3.set_title(f"Grad-CAM (error)\nPred: {preds[sample_idx]:.3f}")
+                ax3.set_title(f"Grad-CAM (error)\nPred: {pred_value:.3f}")
             ax3.axis("off")
 
     plt.tight_layout()
@@ -407,14 +409,12 @@ def run_train_test(
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 torch.save(model.state_dict(), best_model_path)
-                wandb.save(str(best_model_path))
                 print("Saved new best model checkpoint.")
 
         wandb.log(log_data)
 
     if not best_model_path.exists():
         torch.save(model.state_dict(), best_model_path)
-        wandb.save(str(best_model_path))
 
     model.load_state_dict(torch.load(best_model_path, map_location=device))
     model.eval()
@@ -444,6 +444,10 @@ def run_train_test(
         attention_alpha=float(cfg["ATTENTION_ALPHA"]),
         random_state=random_state,
     )
+
+    # Upload the saved test visualization so it is visible in the W&B run.
+    wandb.log({"test/visualization": wandb.Image(str(vis_path))})
+    wandb.save(str(vis_path))
 
     metrics_path = run_dir / "test_metrics.json"
     save_json(metrics_path, {"mse": results["mse"], "mae": results["mae"], "rmse": results["rmse"], "checkpoint": str(best_model_path)})

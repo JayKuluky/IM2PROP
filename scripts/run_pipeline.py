@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import ast
 import copy
+import random
 from pathlib import Path
 from typing import Any
 
@@ -64,7 +65,12 @@ def build_parser(default_config: dict[str, Any]) -> argparse.ArgumentParser:
     parser.add_argument("--MODE", type=str, default="train-test", choices=["train-test", "test-only"])
     parser.add_argument("--RUN_DIR", type=str, default=None, help="Reuse an existing run directory.")
     parser.add_argument("--ENABLE_GRADCAM", type=str, default="true", help="Enable Grad-CAM in test visualization.")
-    parser.add_argument("--RANDOM_STATE", type=int, default=42)
+    parser.add_argument(
+        "--RANDOM_STATE",
+        type=int,
+        default=None,
+        help="Random split seed. If omitted, auto-sampled from 0..10000.",
+    )
     parser.add_argument("--OUTPUT_DIR", type=str, default=None)
     parser.add_argument("--WANDB_PROJECT", type=str, default="im2prop")
     parser.add_argument("--RUN_NAME", type=str, default=None)
@@ -101,12 +107,14 @@ def main() -> None:
 
     enable_gradcam = str2bool(args.ENABLE_GRADCAM)
     dummy_run = str2bool(args.DUMMY_RUN)
+    random_state = args.RANDOM_STATE if args.RANDOM_STATE is not None else random.randint(0, 10000)
+    print(f"Using RANDOM_STATE={random_state}")
 
     if args.MODE == "train-test":
         run_train_test(
             cfg=cfg,
             run_dir=run_dir,
-            random_state=args.RANDOM_STATE,
+            random_state=random_state,
             enable_gradcam=enable_gradcam,
             output_dir=args.OUTPUT_DIR,
             wandb_project=args.WANDB_PROJECT,
@@ -119,7 +127,7 @@ def main() -> None:
     run_test_only(
         cfg=cfg,
         run_dir=Path(run_dir),
-        random_state=args.RANDOM_STATE,
+        random_state=random_state,
         enable_gradcam=enable_gradcam,
         output_dir=args.OUTPUT_DIR,
     )
