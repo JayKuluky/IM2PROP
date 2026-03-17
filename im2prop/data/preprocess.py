@@ -135,6 +135,7 @@ def process_dataset_phase_masks(
     dark_ratio_col: str = "dark_phase_ratio",
     image_suffix: str = ".jpg",
     mask_suffix: str = "_mask.jpg",
+    use_existing_masks: bool = True,
     config: Optional[dict[str, Any]] = None,
 ) -> tuple[pd.DataFrame, list[str]]:
     """Run phase-mask extraction for all rows and save an augmented CSV.
@@ -142,6 +143,9 @@ def process_dataset_phase_masks(
     Returns:
     - updated dataframe
     - list of failed image IDs
+
+    When use_existing_masks=True, an existing mask file is reused if present.
+    When use_existing_masks=False, masks are always regenerated from source images.
     """
     image_dir = Path(image_dir)
     mask_dir = ensure_directory(mask_dir)
@@ -155,11 +159,20 @@ def process_dataset_phase_masks(
     for _, row in tqdm(df.iterrows(), total=len(df), desc="Extracting phase masks"):
         img_id = row[image_id_col]
         img_path = image_dir / f"{img_id}{image_suffix}"
+        mask_path = mask_dir / f"{img_id}{mask_suffix}"
 
         try:
-            mask, light_ratio, dark_ratio = extract_phase_mask(img_path, config=config)
-            mask_path = mask_dir / f"{img_id}{mask_suffix}"
-            cv2.imwrite(str(mask_path), mask)
+            if use_existing_masks and mask_path.exists():
+                mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
+                if mask is None:
+                    raise ValueError(f"Cannot read existing mask: {mask_path}")
+                # Normalize potentially compressed masks to strict binary values.
+                _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
+                light_ratio = float(np.mean(mask == 255) * 100.0)
+                dark_ratio = float(np.mean(mask == 0) * 100.0)
+            else:
+                mask, light_ratio, dark_ratio = extract_phase_mask(img_path, config=config)
+                cv2.imwrite(str(mask_path), mask)
             light_ratios.append(light_ratio)
             dark_ratios.append(dark_ratio)
         except Exception:

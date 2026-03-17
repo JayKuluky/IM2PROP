@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from im2prop.config import DEFAULT_CONFIG
+from im2prop.data.preprocess import process_dataset_phase_masks
 from im2prop.training.pipeline import (
     load_json,
     prepare_run_dir,
@@ -76,6 +77,12 @@ def build_parser(default_config: dict[str, Any]) -> argparse.ArgumentParser:
     parser.add_argument("--RUN_NAME", type=str, default=None)
     parser.add_argument("--DUMMY_RUN", type=str, default="false")
     parser.add_argument("--DUMMY_SAMPLES", type=int, default=32)
+    parser.add_argument(
+        "--USE_OLD_MASKS",
+        type=str,
+        default="true",
+        help="If true, reuse existing mask files; if false, regenerate masks.",
+    )
 
     return parser
 
@@ -107,8 +114,20 @@ def main() -> None:
 
     enable_gradcam = str2bool(args.ENABLE_GRADCAM)
     dummy_run = str2bool(args.DUMMY_RUN)
+    use_old_masks = str2bool(args.USE_OLD_MASKS)
     random_state = args.RANDOM_STATE if args.RANDOM_STATE is not None else random.randint(0, 10000)
     print(f"Using RANDOM_STATE={random_state}")
+
+    print(f"Preparing masks (USE_OLD_MASKS={use_old_masks})...")
+    _df_masks, failed_images = process_dataset_phase_masks(
+        image_dir=cfg["IMAGE_DIR"],
+        mask_dir=cfg["MASK_DIR"],
+        csv_path=cfg["CSV_PATH"],
+        csv_v2_path=cfg["CSV_V2_PATH"],
+        config=cfg,
+        use_existing_masks=use_old_masks,
+    )
+    print(f"Mask preprocessing finished. Failed images: {len(failed_images)}")
 
     if args.MODE == "train-test":
         run_train_test(
