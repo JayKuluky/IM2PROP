@@ -15,3 +15,4 @@ im2prop/models/__init__.py
 im2prop/models/micronet.py
 im2prop/training/__init__.py
 im2prop/training/engine.py
+im2prop/training/pipeline.py

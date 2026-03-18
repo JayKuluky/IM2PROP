@@ -1,72 +1,43 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Run 8 combinations for:
+# Run all 8 combinations for:
 # USE_PHASE_RATIOS, USE_PHASE_ATTENTION, USE_PHASE_FEAT
-# Mode is train-test, Grad-CAM is enabled, and each run name is unique.
+# Each combination is repeated 5 times.
 
-uv run scripts/run_pipeline.py \
-  --MODE train-test \
-  --ENABLE_GRADCAM true \
-  --USE_PHASE_RATIOS false \
-  --USE_PHASE_ATTENTION false \
-  --USE_PHASE_FEAT false \
-  --RUN_NAME combo01_r0_a0_f0_1
+REPEATS=5
 
-uv run scripts/run_pipeline.py \
-  --MODE train-test \
-  --ENABLE_GRADCAM true \
-  --USE_PHASE_RATIOS false \
-  --USE_PHASE_ATTENTION false \
-  --USE_PHASE_FEAT true \
-  --RUN_NAME combo02_r0_a0_f1_1
+combo_id=1
+for ratios in false true; do
+  for attention in false true; do
+    for feat in false true; do
+      printf -v combo_tag "combo%02d_r%s_a%s_f%s" \
+        "$combo_id" \
+        "$([[ "$ratios" == "true" ]] && echo 1 || echo 0)" \
+        "$([[ "$attention" == "true" ]] && echo 1 || echo 0)" \
+        "$([[ "$feat" == "true" ]] && echo 1 || echo 0)"
+        wandb_group="${combo_tag}_30_epochs"
 
-uv run scripts/run_pipeline.py \
-  --MODE train-test \
-  --ENABLE_GRADCAM true \
-  --USE_PHASE_RATIOS false \
-  --USE_PHASE_ATTENTION true \
-  --USE_PHASE_FEAT false \
-  --RUN_NAME combo03_r0_a1_f0_1
+      for rep in $(seq 1 "$REPEATS"); do
+        run_name="${combo_tag}_${rep}_30_epochs"
+          echo "Running ${run_name} (WANDB_GROUP=${wandb_group})"
 
-uv run scripts/run_pipeline.py \
-  --MODE train-test \
-  --ENABLE_GRADCAM true \
-  --USE_PHASE_RATIOS false \
-  --USE_PHASE_ATTENTION true \
-  --USE_PHASE_FEAT true \
-  --RUN_NAME combo04_r0_a1_f1_1
+        uv run scripts/run_pipeline.py \
+          --MODE train-test \
+          --ENABLE_GRADCAM true \
+          --WANDB_GROUP "${wandb_group}" \
+          --NUM_EPOCHS 30 \
+          --USE_OLD_MASKS true \
+          --ENABLE_PATCHING false \
+          --USE_PHASE_RATIOS "${ratios}" \
+          --USE_PHASE_ATTENTION "${attention}" \
+          --USE_PHASE_FEAT "${feat}" \
+          --RUN_NAME "${run_name}"
+      done
 
-uv run scripts/run_pipeline.py \
-  --MODE train-test \
-  --ENABLE_GRADCAM true \
-  --USE_PHASE_RATIOS true \
-  --USE_PHASE_ATTENTION false \
-  --USE_PHASE_FEAT false \
-  --RUN_NAME combo05_r1_a0_f0_1
-
-uv run scripts/run_pipeline.py \
-  --MODE train-test \
-  --ENABLE_GRADCAM true \
-  --USE_PHASE_RATIOS true \
-  --USE_PHASE_ATTENTION false \
-  --USE_PHASE_FEAT true \
-  --RUN_NAME combo06_r1_a0_f1_1
-
-uv run scripts/run_pipeline.py \
-  --MODE train-test \
-  --ENABLE_GRADCAM true \
-  --USE_PHASE_RATIOS true \
-  --USE_PHASE_ATTENTION true \
-  --USE_PHASE_FEAT false \
-  --RUN_NAME combo07_r1_a1_f0_1
-
-uv run scripts/run_pipeline.py \
-  --MODE train-test \
-  --ENABLE_GRADCAM true \
-  --USE_PHASE_RATIOS true \
-  --USE_PHASE_ATTENTION true \
-  --USE_PHASE_FEAT true \
-  --RUN_NAME combo08_r1_a1_f1_1
+      combo_id=$((combo_id + 1))
+    done
+  done
+done
 
 printf "\nAll phase-combination runs completed successfully.\n"

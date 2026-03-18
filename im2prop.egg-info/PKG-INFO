@@ -21,6 +21,7 @@ Requires-Dist: segmentation-models-pytorch
 Requires-Dist: timm
 Requires-Dist: scikit-image
 Requires-Dist: pretrained-microscopy-models
+Requires-Dist: grad-cam>=1.5.5
 Dynamic: license-file
 
 # IM2PROP

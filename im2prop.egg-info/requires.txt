@@ -14,3 +14,4 @@ segmentation-models-pytorch
 timm
 scikit-image
 pretrained-microscopy-models
+grad-cam>=1.5.5

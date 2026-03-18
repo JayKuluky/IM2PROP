@@ -74,13 +74,14 @@ def build_parser(default_config: dict[str, Any]) -> argparse.ArgumentParser:
     )
     parser.add_argument("--OUTPUT_DIR", type=str, default=None)
     parser.add_argument("--WANDB_PROJECT", type=str, default="im2prop")
+    parser.add_argument("--WANDB_GROUP", type=str, default=None)
     parser.add_argument("--RUN_NAME", type=str, default=None)
     parser.add_argument("--DUMMY_RUN", type=str, default="false")
     parser.add_argument("--DUMMY_SAMPLES", type=int, default=32)
     parser.add_argument(
         "--USE_OLD_MASKS",
         type=str,
-        default="true",
+        default="false",
         help="If true, reuse existing mask files; if false, regenerate masks.",
     )
 
@@ -116,7 +117,7 @@ def main() -> None:
     dummy_run = str2bool(args.DUMMY_RUN)
     use_old_masks = str2bool(args.USE_OLD_MASKS)
     random_state = args.RANDOM_STATE if args.RANDOM_STATE is not None else random.randint(0, 10000)
-    print(f"Using RANDOM_STATE={random_state}")
+    print(f"Using RANDOM_STATE={random_state}", flush=True)
 
     print(f"Preparing masks (USE_OLD_MASKS={use_old_masks})...")
     _df_masks, failed_images = process_dataset_phase_masks(
@@ -137,6 +138,7 @@ def main() -> None:
             enable_gradcam=enable_gradcam,
             output_dir=args.OUTPUT_DIR,
             wandb_project=args.WANDB_PROJECT,
+            wandb_group=args.WANDB_GROUP,
             run_name=args.RUN_NAME,
             dummy_run=dummy_run,
             dummy_samples=args.DUMMY_SAMPLES,

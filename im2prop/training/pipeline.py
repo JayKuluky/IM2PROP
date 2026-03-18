@@ -313,11 +313,12 @@ def run_train_test(
     enable_gradcam: bool,
     output_dir: Optional[str] = None,
     wandb_project: str = "im2prop",
+    wandb_group: Optional[str] = None,
     run_name: Optional[str] = None,
     dummy_run: bool = False,
     dummy_samples: int = 32,
 ) -> None:
-    run = wandb.init(project=wandb_project, name=run_name, config=cfg)
+    run = wandb.init(project=wandb_project, group=wandb_group, name=run_name, config=cfg)
     cfg = dict(wandb.config)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -325,6 +326,7 @@ def run_train_test(
     print_section("IM2PROP v2 - Runtime Configuration")
     print(f"Device: {device}")
     print(f"Run directory: {run_dir}")
+    print(f"Random split seed: {random_state}")
     print(f"Dummy run: {dummy_run}")
     print(f"Patching: {'ENABLED' if cfg['ENABLE_PATCHING'] else 'DISABLED'}")
 

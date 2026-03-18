@@ -24,7 +24,8 @@ dependencies = [
     "segmentation-models-pytorch",
     "timm",
     "scikit-image",
-    "pretrained-microscopy-models"
+    "pretrained-microscopy-models",
+    "grad-cam>=1.5.5",
 ]
 
 [tool.setuptools]
