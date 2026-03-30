@@ -16,17 +16,17 @@ for ratios in false true; do
         "$([[ "$ratios" == "true" ]] && echo 1 || echo 0)" \
         "$([[ "$attention" == "true" ]] && echo 1 || echo 0)" \
         "$([[ "$feat" == "true" ]] && echo 1 || echo 0)"
-        wandb_group="${combo_tag}_30_epochs"
+        wandb_group="${combo_tag}_80_epochs"
 
       for rep in $(seq 1 "$REPEATS"); do
-        run_name="${combo_tag}_${rep}_30_epochs"
+        run_name="${combo_tag}_${rep}_80_epochs"
           echo "Running ${run_name} (WANDB_GROUP=${wandb_group})"
 
         uv run scripts/run_pipeline.py \
           --MODE train-test \
           --ENABLE_GRADCAM true \
           --WANDB_GROUP "${wandb_group}" \
-          --NUM_EPOCHS 30 \
+          --NUM_EPOCHS 80 \
           --USE_OLD_MASKS true \
           --ENABLE_PATCHING false \
           --USE_PHASE_RATIOS "${ratios}" \
